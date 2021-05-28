@@ -7,6 +7,7 @@ mongoose.connect(
   myMongoURI,
   { useNewUrlParser: true, useUnifiedTopology: true }
 );
+mongoose.set('useFindAndModify', false);
 
 let PersonSchema = new mongoose.Schema({
   username: String, // String is shorthand for {type: String}
