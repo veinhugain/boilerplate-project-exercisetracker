@@ -10,11 +10,16 @@ mongoose.connect(
 mongoose.set('useFindAndModify', false);
 
 let PersonSchema = new mongoose.Schema({
-  username: String, // String is shorthand for {type: String}
+  username: {type:String,
+  unique: true,
+  index: true}, // String is shorthand for {type: String}
   log : [{
     description: String,
     duration : Number,
-    date: String
+    date: {
+      type: Date,
+      default: new Date()
+    }
     }]
   },{collection: 'exercisetracker'});
 
