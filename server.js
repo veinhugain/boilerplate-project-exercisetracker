@@ -129,7 +129,10 @@ app.post('/api/users/:userId/exercises', (req, res) => {
 
   if (req.body.date) {
     newEvent.date = new Date(req.body.date);
+  }else{
+    newEvent.date = new Date();
   }
+
 
   // if (isValidURL(req.body.date)) console.log('date sent valid:',req.body.date)
   // if (!isValidURL(req.body.date)) return console.log('date sent invalid:',req.body.date)
@@ -147,11 +150,18 @@ app.post('/api/users/:userId/exercises', (req, res) => {
       if (data === null) {
         res.send('username not found')
       } else {
-        // console.log('updated log',data)
-        res.json({
-          "_id": data._id,
+        console.log('updated log',({
+          "_id": id,
           "username": data.username,
-          "date": displayDate(data.log[data.log.length - 1].date),
+          "date": new Date(newEvent.date).toDateString(),
+          "duration": data.log[data.log.length - 1].duration,
+          "description": data.log[data.log.length - 1].description
+        }))
+        res.json({
+          "_id": id,
+          "username": data.username,
+          "date": new Date(newEvent.date).toDateString(),
+          //displayDate(data.log[data.log.length - 1].date),
           "duration": data.log[data.log.length - 1].duration,
           "description": data.log[data.log.length - 1].description
         })
@@ -162,36 +172,43 @@ app.post('/api/users/:userId/exercises', (req, res) => {
 
 
 
-app.get('/api/users/:userId/exercises', (req, res) => {
-  // console.log('look up log', req.params, req.body)
+app.get('/api/users/:userId/logs', (req, res) => {
+   console.log('look up log', req.params, req.body, req.query)
   const id = req.params.userId;
-  const description = req.body.description;
-  const duration = req.body.duration;
-  const date = req.body.date;
   console.log('look up log', id)
 
-  if (duration === '') return res.send('duration is reqiured')
-  if (description === '') return res.send('description is reqiured')
+  // Person.findOne({ airedAt: { $gte: '1987-10-19', $lte: '1987-10-26' } }).
+  //     sort({ airedAt: 1 });
 
 
   Person.findOne({ _id: id })   //, (err, data) => {}
     .then((data) => {
-      // console.log('person find in update: \n',data)
+      console.log('person find in update: \n',data)
       if (data === null) {
-        res.send('username not found')
+        res.send('userId not found')
       } else {
         // console.log('found log',data)
-        dispLog = data.log.map(x => {
+        if (req.query.from) logs = data.log.filter(x => {
+            if (req.query.to)  return new Date(x.date) >= new Date(req.query.from) && new Date(x.date) <= new Date(req.query.to)
+            else return new Date(x.date) >= new Date(req.query.from)
+            });
+        else  logs = data.log   
+        logs.sort()
+        console.log('Limit',parseInt(req.query.limit)-1,logs.length)
+        if (req.query.limit) logs.splice(0,logs.length-parseInt(req.query.limit))
+        console.log('Limit',parseInt(req.query.limit)-1,logs.length)
+        
+        dispLog = logs.map(x => {
           return {
             "description": x.description,
             "duration": x.duration,
-            "date": displayDate(x.date)
+            "date": new Date(x.date).toDateString()
           }
         });
 
 
-        res.send({
-          "_id": data._id,
+        res.json({
+          "_id": id,
           "username": data.username,
           // "date":data.log[data.log.length-1].date,
           // "duration":data.log[data.log.length-1].duration,
